@@ -1,21 +1,18 @@
-const inspect = require("util").inspect
+const util = require("util")
+const EventEmitter = require('events').EventEmitter
 
 function Fsm(events, initstate){
   this.state = initstate
   //this.events = events
   this.transitions = {}
   for ( let e of events){
-    let action = this[e.action]
-    if (!action){
-      this[e.action] = function(){ console.log(e.action)}
-    }
     let transit = this.transitions[e.from]
     if (transit){
-      transit[e.to] =this[e.action]
+      transit[e.to] =e.action
     }
     else{
       transit = {}
-      transit[e.to] =this[e.action]
+      transit[e.to] =e.action
     }
     this.transitions[e.from]=transit
       
@@ -23,35 +20,29 @@ function Fsm(events, initstate){
  
 }
 
+util.inherits(Fsm, EventEmitter)
+
 Fsm.prototype.transit = function (to){
   let handler = this.transitions[this.state][to]
-  if(handler)
-    handler()
+  console.log(handler)
+  if(handler){
+    this.state= to  
+     this.emit(handler)
+  }
   else
     throw new Error(`Invalid transition  from : ${this.state} ->  ${to}`)
-  this.state= to  
 }
-let states = [
-  "waiting",
-  "created",
-  "finalized",
-  "paid",
-  "delivered",
-  "canceled"
-]
 
-let event = [
-  {action : "onCancelComplete", from:"canceled",to:"waiting"},
-  {action :"onCreated", from:"waiting", to:"created" },
-  {action:"onFinalise", from:"created", to:"finalised"},
-  {action:"onPaid", from:"finalized", to :"paid"},
-  {action :"onCancel", from:"created", to: "canceled"},
-  {action :"onCancel", from:"finalized", to: "canceled"},
-]
-
-var b = new Fsm(event,"waiting")
-console.log(inspect(b))
-b.transit('created')
-b.transit('waiting')
+Fsm.prototype.toDot= function (){
+  console.log("digraph G {")
+  let keys  = Object.keys(this.transitions)
+  for (let key of keys){
+    let subkeys =  Object.keys(this.transitions[key])
+    for (let subkey of subkeys) { 
+      console.log(`   ${ key } -> ${subkey} [label = "${this.transitions[key][subkey]}"]; ` )  
+    }
+  }
+  console.log("}")
+}
 
 module.exports=Fsm
