@@ -22,12 +22,12 @@ function Fsm(events, initstate){
 
 util.inherits(Fsm, EventEmitter)
 
-Fsm.prototype.transit = function (to){
+Fsm.prototype.transit = function (to, data){
   let handler = this.transitions[this.state][to]
   console.log(handler)
   if(handler){
     this.state= to  
-     this.emit(handler)
+     this.emit(handler, data)
   }
   else
     throw new Error(`Invalid transition  from : ${this.state} ->  ${to}`)
