@@ -8,11 +8,11 @@ function Fsm(events, initstate){
   for ( let e of events){
     let transit = this.transitions[e.from]
     if (transit){
-      transit[e.to] =e.action
+      transit[e.to] =e.name
     }
     else{
       transit = {}
-      transit[e.to] =e.action
+      transit[e.to] =e.name
     }
     this.transitions[e.from]=transit
       
